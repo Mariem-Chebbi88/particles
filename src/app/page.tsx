@@ -1,9 +1,13 @@
-import UserTable from "@/components/tablestack/Table";
+
+import CategoryTable from "@/components/24-7/tablestack/CategoryTable";
+import Tickets from "@/components/24-7/tablestack/Tickets";
+import TicketTable from "@/components/24-7/tablestack/TicketTable";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <UserTable />
+    <main className="flex flex-col h-screen p-10">
+      <Tickets/>
+     <CategoryTable/>
     </main>
   );
 }

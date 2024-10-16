@@ -10,6 +10,10 @@ import {
 } from "@tanstack/react-table";
 import { GoPersonAdd } from "react-icons/go";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { FaRegTrashAlt } from "react-icons/fa";
+import { IoPersonRemoveOutline } from "react-icons/io5";
+import Tickets from "./Tickets";
 
 interface User {
   name: string;
@@ -146,11 +150,8 @@ const getStatusStyles = (status: User["status"]) => {
 };
 
 const UserTable: React.FC = () => {
-  const [data] = React.useState([...defaultData]);
-  const [openMenu, setOpenMenu] = React.useState<number | null>(null); // State to manage open menu
-  const handleMenuClick = (index: number) => {
-    setOpenMenu(openMenu === index ? null : index);
-  };
+  const [data, setData] = React.useState([...defaultData]);
+
   const table = useReactTable({
     data,
     columns,
@@ -164,72 +165,114 @@ const UserTable: React.FC = () => {
     },
   });
 
+  const handleDelete = (email: string) => {
+    setData((prevData) => prevData.filter((user) => user.email !== email));
+  };
+
+  const handleDisableToggle = (email: string) => {
+    setData((prevData) =>
+      prevData.map((user) =>
+        user.email === email
+          ? {
+              ...user,
+              status: user.status === "disabled" ? "active" : "disabled",
+            }
+          : user
+      )
+    );
+  };
+
   return (
     <div className="w-full font-light text-[#6F6F6F] text-[0.875rem] leading-[1.25rem] text-left border border-[#EDEDED] rounded-2xl p-5">
+      <Tickets/>
       <div className="flex w-full justify-end mb-6">
         <button className="text-white bg-[#5AC3DF] px-4 py-3 flex gap-[0.625rem] rounded-full items-center">
           <GoPersonAdd className="size-4" /> Invite Teammate
         </button>
       </div>
 
-      <table className="min-w-full table-auto border-collapse">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className="p-4 border-b font-medium">
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row, rowIndex) => (
-            <tr
-              key={row.id}
-              className={`hover:bg-gray-100 ${
-                rowIndex === table.getRowModel().rows.length - 1
-                  ? ""
-                  : "border-b"
-              }`}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="p-4">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      <div className="overflow-x-auto">
+        <table className="min-w-full table-auto border-collapse">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} className="p-4 border-b font-medium">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row, rowIndex) => (
+              <tr
+                key={row.id}
+                className={`hover:bg-gray-100 ${
+                  rowIndex === table.getRowModel().rows.length - 1
+                    ? ""
+                    : "border-b"
+                }`}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="p-4">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+                <td className="relative p-4">
+                  <Menu as="div" className="relative inline-block text-left">
+                    <MenuButton className="text-gray-500">
+                      <BsThreeDotsVertical />
+                    </MenuButton>
+
+                    <MenuItems className="absolute left-0 mt-2 bg-white shadow-lg rounded-md z-10 whitespace-nowrap">
+                      <MenuItem>
+                        {() => (
+                          <button
+                            className="active:bg-gray-100 flex gap-2 items-center justify-center w-full px-4 py-2 text-left text-gray-600"
+                            onClick={() =>
+                              handleDisableToggle(row.original.email)
+                            }
+                          >
+                            {row.original.status === "disabled" ? (
+                              <GoPersonAdd />
+                            ) : (
+                              <IoPersonRemoveOutline />
+                            )}
+
+                            {row.original.status === "disabled"
+                              ? "active"
+                              : "disabled"}
+                          </button>
+                        )}
+                      </MenuItem>
+
+                      <MenuItem>
+                        {() => (
+                          <button
+                            className="active:bg-gray-100 flex gap-2 items-center justify-center w-full px-4 py-2 text-left text-[#E78AC5]"
+                            onClick={() => handleDelete(row.original.email)}
+                          >
+                            <FaRegTrashAlt /> Delete
+                          </button>
+                        )}
+                      </MenuItem>
+                    </MenuItems>
+                  </Menu>
                 </td>
-              ))}
-              <td className="relative p-4">
-                <button
-                  onClick={() => handleMenuClick(row.index)}
-                  className="text-gray-500"
-                >
-                  <BsThreeDotsVertical />
-                </button>
-                {openMenu === row.index && (
-                  <div className="absolute left-0 mt-2 w-40 bg-white shadow-lg rounded-md z-10">
-                    <button className="block w-full px-4 py-2 text-left text-gray-600 hover:bg-gray-100 transition-all duration-200">
-                      Disable Person
-                    </button>
-                    <button className="block w-full px-4 py-2 text-left text-red-500 hover:bg-gray-100 transition-all duration-200">
-                      Delete
-                    </button>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination Controls */}
       <div className="flex justify-center items-center mt-6 space-x-4 text-center">
-        {/* Previous Page Button */}
         <button
           onClick={() =>
             table.setPageIndex(table.getState().pagination.pageIndex - 1)
@@ -242,8 +285,6 @@ const UserTable: React.FC = () => {
           <IoIosArrowBack />
         </button>
 
-        {/* Previous Page Number */}
-        {/* Only show if we are on page > 1 */}
         {table.getState().pagination.pageIndex > 0 && (
           <span
             onClick={() =>
@@ -257,13 +298,10 @@ const UserTable: React.FC = () => {
           </span>
         )}
 
-        {/* Current Page */}
         <span className="p-2 border-2 border-[#EDEDED] rounded-full bg-[#5AC3DF] text-white size-10">
           {table.getState().pagination.pageIndex + 1}
         </span>
 
-        {/* Next Page Number */}
-        {/* Only show if there's a next page */}
         {table.getCanNextPage() && (
           <span
             onClick={() =>
@@ -277,7 +315,6 @@ const UserTable: React.FC = () => {
           </span>
         )}
 
-        {/* Next Page Button */}
         <button
           onClick={() =>
             table.setPageIndex(table.getState().pagination.pageIndex + 1)
